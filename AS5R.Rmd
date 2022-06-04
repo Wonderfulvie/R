@@ -1,0 +1,108 @@
+---
+title: "AS5"
+author: "Bowen Zheng"
+date: "9/30/2021"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+(a) Use the rnorm() function to generate a predictor X of length n=100, as well as a noise vector of length n=100.
+```{r}
+set.seed(1)
+X <- rnorm(100)
+noise <- rnorm(100)
+```
+(b) Generate a response vector Y of length n=100 according to the model
+
+Y=β0+β1X+β2X2+β3X3+ϵ
+
+Where β0, β1, β2, and β3are constants of your choice.
+```{r}
+Y <- 2 + 1*X + 3*X^2 - 0.1*X^3 + noise
+```
+(c) Use the regsubsets() function to perform best subset selection in order to choose the best model containing the predictors X,X2,...,X10. What is the best model obtained according to Cp, BIC, and adjusted R2? Show some plots to provide evidence for your answer, and report the coefficients of the best model obtained. Note you will need to use the data.frame() function to create a single data set containing both X and Y.
+
+```{r}
+library(leaps)
+data.full <-  data.frame("y" = Y, "x" = X)
+mod.full <-  regsubsets(y ~ poly(x, 10, raw=TRUE), data = data.full, nvmax = 10)
+mod.summary <-  summary(mod.full)
+which.min(mod.summary$cp)
+which.min(mod.summary$bic)
+which.max(mod.summary$adjr2)
+```
+```{r}
+plot(mod.summary$cp, xlab="Subset Size", ylab="Cp", pch=20, type="l")
+points(3, mod.summary$cp[3], pch=4, lwd=7)
+```
+
+```{r}
+plot(mod.summary$bic, xlab="Subset Size", ylab="BIC", pch=20, type="l")
+points(3, mod.summary$bic[3], pch=4, lwd=7)
+```
+```{r}
+plot(mod.summary$adjr2, xlab="Subset Size", ylab="Adjusted R2", pch=20, type="l")
+points(3, mod.summary$adjr2[3], pch=4, lwd=7)
+```
+```{r}
+coefficients(mod.full, id=3)
+```
+
+(d) Repeat (c), using forward stepwise selection and also using backwards stepwise selection. How does your answer compare to the results in (c)?
+
+```{r}
+mod.fwd <-  regsubsets(y ~ poly(x, 10, raw=TRUE), 
+                       data = data.full, nvmax = 10, 
+                       method="forward")
+
+# backward
+mod.bwd <-  regsubsets(y ~ poly(x, 10, raw=TRUE), 
+                       data = data.full, nvmax=10, 
+                       method="backward")
+
+fwd.summary <-  summary(mod.fwd)
+bwd.summary <-  summary(mod.bwd)
+
+which.min(fwd.summary$cp)
+which.min(bwd.summary$cp)
+which.min(fwd.summary$bic)
+which.min(bwd.summary$bic)
+which.max(fwd.summary$adjr2)
+which.max(bwd.summary$adjr2)
+```
+
+```{r}
+par(mfrow=c(3, 2))
+
+plot(fwd.summary$cp, xlab="Subset Size", ylab="Forward Cp", pch=20, type="l")
+points(3, fwd.summary$cp[3], pch=4,  lwd=7)
+plot(bwd.summary$cp, xlab="Subset Size", ylab="Backward Cp", pch=20, type="l")
+points(3, bwd.summary$cp[3], pch=4,  lwd=7)
+plot(fwd.summary$bic, xlab="Subset Size", ylab="Forward BIC", pch=20, type="l")
+points(3, fwd.summary$bic[3], pch=4,  lwd=7)
+plot(bwd.summary$bic, xlab="Subset Size", ylab="Backward BIC", pch=20, type="l")
+points(3, bwd.summary$bic[3], pch=4,  lwd=7)
+plot(fwd.summary$adjr2, xlab="Subset Size", ylab="Forward Adjusted R2", pch=20, type="l")
+points(3, fwd.summary$adjr2[3], pch=4,  lwd=7)
+plot(bwd.summary$adjr2, xlab="Subset Size", ylab="Backward Adjusted R2", pch=20, type="l")
+points(4, bwd.summary$adjr2[4], pch=4,  lwd=7)
+```
+
+```{r}
+coefficients(mod.fwd, id=3)
+coefficients(mod.bwd, id=3)
+coefficients(mod.fwd, id=4)
+```

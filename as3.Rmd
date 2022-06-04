@@ -1,0 +1,131 @@
+---
+title: "Individual Assignment3"
+author: "Bowen Zheng"
+date: "9/18/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+library(ISLR)
+library(MASS)
+library(class)
+library(corrplot)
+```
+
+```{r}
+summary(Weekly)
+```
+
+#a)Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?
+```{r}
+corrplot(cor(Weekly[,-9]), method="square")
+pairs(Weekly)  
+```
+Volume has an obvious linear relationship with Year
+
+#b)Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?
+```{r}
+Weekly.fit = glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume,family = "binomial", data=Weekly)
+summary(Weekly.fit)
+```
+Lag2 seems to be statistically significant to predict the Direction. p value < 0.05
+
+#c)Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.
+```{r}
+probs = predict(Weekly.fit, type="response")
+preds = rep("Down", 1089)
+preds[probs > 0.5] = "Up"
+table(preds, Weekly$Direction)
+```
+
+(54+557)/(54+48+430+557)=0.5611
+This shows that the model has a prediction accuracy of 56.11% for the weekly market trend.
+Up trends 557/(48+557)=0.92   92%correct
+Down trends 54/(430+54)=0.11   11%correct
+
+#d)Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
+```{r}
+train = (Weekly$Year<2009)
+Weekly.0910 <-Weekly[!train,]
+Weekly.fit<-glm(Direction~Lag2, data=Weekly,family=binomial, subset=train)
+logWeekly.prob= predict(Weekly.fit, Weekly.0910, type = "response")
+logWeekly.pred = rep("Down", length(logWeekly.prob))
+logWeekly.pred[logWeekly.prob > 0.5] = "Up"
+Direction.0910 = Weekly$Direction[!train]
+table(logWeekly.pred, Direction.0910)
+```
+```{r}
+mean(logWeekly.pred == Direction.0910)
+```
+When the entire Weekly data set was split into training data set and test data set, the model correctly predicted the Weekly trend with an accuracy of 62.5%
+
+#(e) Repeat (d) using LDA.
+```{r}
+Weeklylda.fit<-lda(Direction~Lag2, data=Weekly,family=binomial, subset=train)
+Weeklylda.pred<-predict(Weeklylda.fit, Weekly.0910)
+table(Weeklylda.pred$class, Direction.0910)
+mean(Weeklylda.pred$class==Direction.0910)
+```
+
+#(g) Repeat (d) using KNN with K = 1.
+```{r}
+Week.train=as.matrix(Weekly$Lag2[train])
+Week.test=as.matrix(Weekly$Lag2[!train])
+train.Direction =Weekly$Direction[train]
+set.seed(1)
+Weekknn.pred=knn(Week.train,Week.test,train.Direction,k=1)
+table(Weekknn.pred,Direction.0910)
+mean(Weekknn.pred == Direction.0910)
+```
+
+#(h) Which of these methods appears to provide the best results on this data?
+The most accurate methods were Logistic regression and linear discriminant analysis. 62.5% correct.
+
+#(i) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier.
+```{r}
+Weekly.fit<-glm(Direction~Lag2:Lag4+Lag2, data=Weekly,family=binomial, subset=train)
+logWeekly.prob= predict(Weekly.fit, Weekly.0910, type = "response")
+logWeekly.pred = rep("Down", length(logWeekly.prob))
+logWeekly.pred[logWeekly.prob > 0.5] = "Up"
+Direction.0910 = Weekly$Direction[!train]
+table(logWeekly.pred, Direction.0910)
+mean(logWeekly.pred == Direction.0910)
+```
+#Lag2-lag4
+```{r}
+Weeklylda.fit<-lda(Direction~Lag2:Lag4+Lag2, data=Weekly,family=binomial, subset=train)
+Weeklylda.pred<-predict(Weeklylda.fit, Weekly.0910)
+table(Weeklylda.pred$class, Direction.0910)
+mean(Weeklylda.pred$class==Direction.0910)
+```
+
+```{r}
+Weeklyqda.fit = qda(Direction ~ poly(Lag2,2), data = Weekly, subset = train)
+Weeklyqda.pred = predict(Weeklyqda.fit, Weekly.0910)$class
+table(Weeklyqda.pred, Direction.0910)
+mean(Weeklyqda.pred==Direction.0910)
+```
+
+#K=10
+```{r}
+Week.train=as.matrix(Weekly$Lag2[train])
+Week.test=as.matrix(Weekly$Lag2[!train])
+train.Direction =Weekly$Direction[train]
+set.seed(1)
+Weekknn.pred=knn(Week.train,Week.test,train.Direction,k=10)
+table(Weekknn.pred,Direction.0910)
+mean(Weekknn.pred == Direction.0910)
+```
+
+#K=100
+```{r}
+Week.train=as.matrix(Weekly$Lag2[train])
+Week.test=as.matrix(Weekly$Lag2[!train])
+train.Direction =Weekly$Direction[train]
+set.seed(1)
+Weekknn.pred=knn(Week.train,Week.test,train.Direction,k=100)
+table(Weekknn.pred,Direction.0910)
+```
+Logistic regression had the lowest test error rate of 9.09%,With the increase of K value, the error rate did increase, but it was still not as low as logistic regression or LDA.

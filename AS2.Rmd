@@ -1,0 +1,67 @@
+---
+title: "Assignment2"
+author: "Bowen Zheng"
+date: "9/9/2021"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r}
+library(rmarkdown)
+
+```
+
+(a) Fit a multiple regression model to predict Sales using Price, Urban, and US.
+```{r}
+library("ISLR")
+?Carseats
+data(Carseats)
+fit <- lm(Sales ~ Price + Urban + US, data = Carseats)
+summary(fit)
+```
+
+
+
+(b) Provide an interpretation of each coefficient in the model. Be careful—some of the variables in the model are qualitative!
+
+1.When the price increases by $1000 and other forecasts remain unchanged, sales decrease by 54.459 units sold.
+
+2.A store's sales are not affected by whether it is located in an urban area.
+
+3.The sales volume of seats in US stores is 1200 higher than that in non-US stores
+
+(c) Write out the model in equation form, being careful to handle the qualitative variables properly.
+
+Sales=13.0434689+(−0.0544588)×Price+(1.2005727)×US+ε
+
+US=1 is the store is in the US and 0 is not
+
+
+
+
+(d) For which of the predictors can you reject the null hypothesis H0:βj=0H0:βj=0?
+
+We can reject the null hypothesis for 'Urban' variables because p-value=0.936 > 0.05, it is not statistically significant.
+
+(e) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome.
+
+```{r}
+fit2 <- lm(Sales ~ Price + US, data = Carseats)
+summary(fit2)
+```
+(f) How well do the models in (a) and (e) fit the data?
+
+ Neither model is good because R^2 is not high,only about 24% of the variability is explained by these 2 models.
+
+(g) Using the model from (e), obtain 95% confidence intervals for the coefficient(s).
+
+```{r}
+confint(fit2)
+```
+(h) Is there evidence of outliers or high leverage observations in the model from (e)?
+
+```{r}
+par(mfrow = c(2, 2))
+plot(fit2)
+```

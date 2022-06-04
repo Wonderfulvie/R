@@ -1,0 +1,321 @@
+---
+title: "AS7"
+author: "Bowen Zheng"
+date: "10/28/2021"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+#(a) Split the data set into a training set and a test set.
+```{r}
+library(tree)
+library(ISLR)
+attach(Carseats)
+
+set.seed(1)
+train <- sample(1:nrow(Carseats), nrow(Carseats)/2)
+car.train <- Carseats[train, ]
+car.test <- Carseats[-train, ]
+```
+
+
+#(b) Fit a regression tree to the training set. Plot the tree, and interpret the results. What test MSE do you obtain?
+```{r}
+car.tree <- tree(Sales ~ ., data = car.train)
+plot(car.tree)
+text(car.tree, pretty=0)
+```
+
+```{r}
+summary(car.tree)
+```
+
+```{r}
+car.pred <- predict(car.tree, newdata = car.test)
+mean((car.pred - car.test$Sales)^2)
+```
+#(c) Use cross-validation in order to determine the optimal level of tree complexity. Does pruning the tree improve the test MSE?
+```{r}
+set.seed(1)
+car.cv <- cv.tree(car.tree)
+par(mfrow = c(1, 2))
+plot(car.cv$size, car.cv$dev, type = "b")
+plot(car.cv$k, car.cv$dev, type = "b")
+```
+
+```{r}
+par(mfrow = c(1,1))
+prune.car <- prune.tree(car.tree, best = 7)
+plot(prune.car)
+text(prune.car, pretty = 0)
+```
+
+```{r}
+predict.prune <- predict(prune.car, newdata = car.test)
+mean((predict.prune - car.test$Sales)^2)
+```
+
+#(d) Use the bagging approach in order to analyze this data. What test MSE do you obtain? Use the importance() function to determine which variables are most important.
+
+```{r}
+library(randomForest)
+set.seed(1)
+bag.car <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 10,
+                        importance = TRUE)
+bag.car
+```
+
+```{r}
+predict.bag <- predict(bag.car, newdata = car.test)
+mean((predict.bag - car.test$Sales)^2)
+
+```
+
+```{r}
+importance(bag.car)
+
+```
+
+```{r}
+varImpPlot(bag.car)
+
+```
+
+#(e) Use random forests to analyze this data. What test MSE do you obtain? Use the importance() function to determine which variables are most important. Describe the effect of m, the number of variables considered at each split, on the error rate obtained.
+```{r}
+set.seed(1)
+rf.car1 <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 1,
+                        importance = TRUE)
+set.seed(1)
+pred.rf1 <- predict(rf.car1, newdata = car.test)
+mean((pred.rf1 - car.test$Sales)^2)
+
+```
+```{r}
+set.seed(1)
+rf.car2 <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 2,
+                        importance = TRUE)
+set.seed(1)
+pred.rf2 <- predict(rf.car2, newdata = car.test)
+mean((pred.rf2 - car.test$Sales)^2)
+
+```
+
+```{r}
+set.seed(1)
+rf.car <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 3,
+                       importance = TRUE)
+set.seed(1)
+pred.rf <- predict(rf.car, newdata = car.test)
+mean((pred.rf - car.test$Sales)^2)
+
+```
+
+```{r}
+set.seed(1)
+rf.car4 <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 4,
+                        importance = TRUE)
+set.seed(1)
+pred.rf4 <- predict(rf.car4, newdata = car.test)
+mean((pred.rf4 - car.test$Sales)^2)
+
+```
+
+```{r}
+set.seed(1)
+rf.car5 <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 5,
+                        importance = TRUE)
+set.seed(1)
+pred.rf5 <- predict(rf.car5, newdata = car.test)
+mean((pred.rf5 - car.test$Sales)^2)
+
+```
+
+```{r}
+set.seed(1)
+rf.car6 <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 6,
+                        importance = TRUE)
+set.seed(1)
+pred.rf6 <-predict(rf.car6, newdata = car.test)
+mean((pred.rf6 - car.test$Sales)^2)
+
+```
+
+```{r}
+set.seed(1)
+rf.car7 <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 7,
+                        importance = TRUE)
+set.seed(1)
+pred.rf7 <-predict(rf.car7, newdata = car.test)
+mean((pred.rf7 - car.test$Sales)^2)
+
+```
+
+```{r}
+set.seed(1)
+rf.car8 <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 8,
+                        importance = TRUE)
+set.seed(1)
+pred.rf8 <-predict(rf.car8, newdata = car.test)
+mean((pred.rf8 - car.test$Sales)^2)
+
+```
+
+```{r}
+
+set.seed(1)
+rf.car9 <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 9,
+                        importance = TRUE)
+set.seed(1)
+pred.rf9 <-predict(rf.car9, newdata = car.test)
+mean((pred.rf9 - car.test$Sales)^2)
+
+```
+
+```{r}
+importance(rf.car)
+
+```
+
+```{r}
+varImpPlot(rf.car)
+rm(list = ls())
+
+```
+
+(a) Remove the observations for whom the salary information is unknown, and then log-transform the salaries.
+```{r}
+library(ISLR)
+library(tree)
+
+sum(is.na(Hitters))
+sum(is.na(Hitters$Salary))
+```
+
+```{r}
+hitters <- na.omit(Hitters)
+sum(is.na(hitters$Salary))
+hitters$Salary <- log(hitters$Salary)
+```
+(b) Create a training set consisting of the first 200 observations, and a test set consisting of the remaining observations.
+```{r}
+library(gbm)
+train <- 1:200
+hitters.train <- hitters[train, ]
+hitters.test <- hitters[-train, ]
+
+```
+(c) Perform boosting on the training set with 1,000 trees for a range of values of the shrinkage parameter λ. Produce a plot with different shrinkage values on the x-axis and the corresponding training set MSE on the y-axis.
+```{r}
+set.seed(1)
+
+boost.hitters <- gbm(Salary ~ ., data = hitters.train, distribution = "gaussian",
+                    n.trees = 1000)
+summary(boost.hitters)
+
+```
+
+```{r}
+mse.depth <- vector(mode = "numeric")
+max.depth <- 10
+
+grid <- 10^seq(-10, 0, by = 0.05)
+
+mse.train <- vector(mode = "numeric")
+for (k in 1:length(grid)){
+  boost.hitters.train <- gbm(Salary ~ ., data = hitters.train, 
+                             distribution = "gaussian", n.trees = 1000, 
+                             shrinkage = grid[k])
+  pred.boost.train <- predict(boost.hitters.train, newdata = hitters.train, 
+                              n.trees = 1000)
+  mse.train[k] = mean((pred.boost.train - hitters.train$Salary)^2)
+}
+plot(grid, mse.train, ylab = "Training MSE", xlab = "Shrinkage Values", 
+     type = "b")
+
+```
+
+```{r}
+min(mse.train)
+
+```
+
+```{r}
+grid[which.min(mse.train)]
+
+```
+(d) Produce a plot with different shrinkage values on the x-axis and the corresponding test set MSE on the y-axis.
+```{r}
+set.seed(1)
+mse.test <- vector(mode = "numeric")
+for (k in 1:length(grid)){
+  boost.hitters.test <- gbm(Salary ~ ., data = hitters.train, 
+                            distribution = "gaussian", n.trees = 1000, 
+                            shrinkage = grid[k])
+  pred.boost.test <- predict(boost.hitters.test, newdata = hitters.test, 
+                              n.trees = 1000)
+  mse.test[k] = mean((pred.boost.test - hitters.test$Salary)^2)
+}
+plot(grid, mse.test, ylab = "Test MSE", xlab = "Shrinkage Values", 
+     type = "b")
+
+```
+
+```{r}
+min(mse.test)
+
+```
+
+```{r}
+grid[which.min(mse.test)]
+
+```
+(e) Compare the test MSE of boosting to the test MSE that results from applying two of the regression approaches seen in Chapters 3 and 6.
+```{r}
+hitters.lm <- lm(Salary ~ ., data = hitters.train)
+plot(hitters.lm)
+
+```
+
+```{r}
+hitters.lm.pred <- predict(hitters.lm, newdata = hitters.test)
+mean((hitters.lm.pred - hitters.test$Salary)^2)
+
+```
+
+```{r}
+plot(grid, mse.test, ylab = "Test MSE", xlab = "Shrinkage Values", type = "b")
+abline(0.4917959, 0)
+
+```
+MSE boosting lower than linear regression and rideg regression.
+
+(f) Which variables appear to be the most important predictors in the boosted model?
+```{r}
+summary(boost.hitters)
+
+```
+(g) Now apply bagging to the training set. What is the test set MSE for this approach?
+```{r}
+set.seed(1)
+bag.hitters <- randomForest(Salary ~ ., data = hitters.train, mtry = 19, ntree = 500)
+yhat.bag <- predict(bag.hitters, newdata = hitters.test)
+mean((yhat.bag - hitters.test$Salary)^2)
+
+```
+
+MSE lagging lower than MSE boosting
+
+
